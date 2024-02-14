@@ -1,228 +1,168 @@
-gsap.registerPlugin(ScrollTrigger);
-let speed = 100;
+const canvas = document.createElement("canvas")
+const gl = canvas.getContext("webgl2")
 
-/*  SCENE 1 */
-let scene1 = gsap.timeline();
-ScrollTrigger.create({
-    animation: scene1,
-    trigger: ".scrollElement",
-    start: "top top",
-    end: "45% 100%",
-    scrub: 3,
-});
+document.body.innerHTML = ""
+document.body.appendChild(canvas)
+document.body.style = "margin:0;touch-action:none;overflow:hidden;"
+canvas.style.width = "100%"
+canvas.style.height = "auto"
+canvas.style.userSelect = "none"
 
-// hills animation 
-scene1.to("#h1-1", { y: 3 * speed, x: 1 * speed, scale: 0.9, ease: "power1.in" }, 0)
-scene1.to("#h1-2", { y: 2.6 * speed, x: -0.6 * speed, ease: "power1.in" }, 0)
-scene1.to("#h1-3", { y: 1.7 * speed, x: 1.2 * speed }, 0.03)
-scene1.to("#h1-4", { y: 3 * speed, x: 1 * speed }, 0.03)
-scene1.to("#h1-5", { y: 2 * speed, x: 1 * speed }, 0.03)
-scene1.to("#h1-6", { y: 2.3 * speed, x: -2.5 * speed }, 0)
-scene1.to("#h1-7", { y: 5 * speed, x: 1.6 * speed }, 0)
-scene1.to("#h1-8", { y: 3.5 * speed, x: 0.2 * speed }, 0)
-scene1.to("#h1-9", { y: 3.5 * speed, x: -0.2 * speed }, 0)
+const dpr = window.devicePixelRatio
 
-//animate text
-scene1.to("#info", { y: 8 * speed }, 0)
+function resize() {
+    const {
+      innerWidth: width,
+      innerHeight: height
+    } = window
+    
+    canvas.width = width * dpr
+    canvas.height = height * dpr
+    
+    gl.viewport(0, 0, width * dpr, height * dpr)
+}
+window.onresize = resize
 
-
-
-/*   Bird   */
-gsap.fromTo("#bird", { opacity: 1 }, {
-    y: -250,
-    x: 800,
-    ease: "power2.out",
-    scrollTrigger: {
-        trigger: ".scrollElement",
-        start: "15% top",
-        end: "60% 100%",
-        scrub: 4,
-        onEnter: function() { gsap.to("#bird", { scaleX: 1, rotation: 0 }) },
-        onLeave: function() { gsap.to("#bird", { scaleX: -1, rotation: -15 }) },
+const vertexSource = `#version 300 es
+    #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+    #else
+    precision mediump float;
+    #endif
+    
+    in vec4 position;
+    
+    void main(void) {
+        gl_Position = position;
     }
-})
+`
 
-
-/* Clouds  */
-let clouds = gsap.timeline();
-ScrollTrigger.create({
-    animation: clouds,
-    trigger: ".scrollElement",
-    start: "top top",
-    end: "70% 100%",
-    scrub: 1,
-});
-
-clouds.to("#cloud1", { x: 500 }, 0)
-clouds.to("#cloud2", { x: 1000 }, 0)
-clouds.to("#cloud3", { x: -1000 }, 0)
-clouds.to("#cloud4", { x: -700, y: 25 }, 0)
-
-
-
-/* Sun motion Animation  */
-let sun = gsap.timeline();
-ScrollTrigger.create({
-    animation: sun,
-    trigger: ".scrollElement",
-    start: "top top",
-    end: "2200 100%",
-    scrub: 1,
-});
-
-//sun motion 
-sun.to("#bg_grad", { attr: { cy: "330" } }, 0.00)
-
-//bg change
-sun.to("#sun", { attr: { offset: "0.15" } }, 0.00)
-sun.to("#bg_grad stop:nth-child(2)", { attr: { offset: "0.15" } }, 0.00)
-sun.to("#bg_grad stop:nth-child(3)", { attr: { offset: "0.18" } }, 0.00)
-sun.to("#bg_grad stop:nth-child(4)", { attr: { offset: "0.25" } }, 0.00)
-sun.to("#bg_grad stop:nth-child(5)", { attr: { offset: "0.46" } }, 0.00)
-sun.to("#bg_grad stop:nth-child(6)", { attr: { "stop-color": "#FF9171" } }, 0)
-
-
-
-/*   SCENE 2  */
-let scene2 = gsap.timeline();
-ScrollTrigger.create({
-    animation: scene2,
-    trigger: ".scrollElement",
-    start: "15% top",
-    end: "40% 100%",
-    scrub: 4,
-});
-
-scene2.fromTo("#h2-1", { y: 500, opacity: 0 }, { y: 0, opacity: 1 }, 0)
-scene2.fromTo("#h2-2", { y: 500 }, { y: 0 }, 0.1)
-scene2.fromTo("#h2-3", { y: 700 }, { y: 0 }, 0.1)
-scene2.fromTo("#h2-4", { y: 700 }, { y: 0 }, 0.2)
-scene2.fromTo("#h2-5", { y: 800 }, { y: 0 }, 0.3)
-scene2.fromTo("#h2-6", { y: 900 }, { y: 0 }, 0.3)
-
-
-
-/* Bats */
-gsap.fromTo("#bats", { opacity: 1, y: 400, scale: 0 }, {
-    y: 120,
-    scale: 0.8,
-    transformOrigin: "50% 50%",
-    ease: "power3.out",
-    scrollTrigger: {
-        trigger: ".scrollElement",
-        start: "40% top",
-        end: "70% 100%",
-        scrub: 3,
-        onEnter: function() {
-            gsap.utils.toArray("#bats path").forEach((item, i) => {
-                gsap.to(item, { scaleX: 0.5, yoyo: true, repeat: 11, duration: 0.15, delay: 0.7 + (i / 10), transformOrigin: "50% 50%" })
-            });
-            gsap.set("#bats", { opacity: 1 })
-        },
-        onLeave: function() { gsap.to("#bats", { opacity: 0, delay: 2 }) },
+const fragmentSource = `#version 300 es
+/*********
+ * made by Matthias Hurrle (@atzedent) 
+ */
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+precision highp float;
+#else
+precision mediump float;
+#endif
+out vec4 O;
+uniform float time;
+uniform vec2 resolution;
+#define FC gl_FragCoord.xy
+#define R resolution
+#define T time
+#define S smoothstep
+vec3 palette(float t) {
+    vec3    
+    a=vec3(.2),
+    b=vec3(.15),
+    c=vec3(.125),
+    d=vec3(1,.8,.6);
+    return a+b*cos(6.3*(c*t+d));
+}
+float rnd(vec2 p) { return fract(sin(dot(p,vec2(12.9898,78.233)))*345678.); }
+float noise(vec2 p) { vec2 i=floor(p), f=fract(p), u=S(.0,1.,f); float a=rnd(i),b=rnd(i+vec2(1,0)),c=rnd(i+vec2(0,1)),d=rnd(i+1.); return mix(mix(a,b,u.x),mix(c,d,u.x),u.y); }
+float fbm(vec2 p) { float t=.0, a=1.; for (int i=0; i<5; i++) { t+=a*noise(p+T*.2); p*=2.; a*=.5; } return t; }
+vec3 pattern(vec2 uv) {
+    vec3 col = vec3(0);
+    vec2 p = uv;
+    float d = 1.;
+    for (float i=.0; i<3.; i++) {
+        p = vec2(cos(uv.x),sin(uv.y))*i;
+        uv *= 2.;
+        d = fbm(uv*d+T*.2);
+        col += d+length(p);
     }
-})
+    return col;
+}
+float heart(vec2 p) {
+    #define dot2(v) dot(v,v)
+    p.x = abs(p.x);
+    p.y+=.6;
 
+    return p.y+p.x>1.
+        ? sqrt(dot2(p-vec2(.25,.75)))-sqrt(2.)*.25
+        : sqrt(min(dot2(p-vec2(0,1)),dot2(p-.5*max(p.x+p.y,.0))))*sign(p.x-p.y);
+}
+void main(void) {
+    vec2 uv = (FC-.5*R)/min(R.x,R.y), p=uv;
+    vec3 col = vec3(0);
+    float d = length(uv);
+    d = 200.*heart(uv*2.)*d*d*d*d;
+    d = abs(d)+.025;
+    d = pow(1./d,.35);
+    p*=sin(exp(log(noise(uv*d+T*.1)))*222.);
+    col = max(vec3(0), mix(S(length(p*.2), 1., palette(d)),palette(length(pattern(uv)))*d,.8));
+    O = vec4(col, 1);
+}
+`
 
-/* Sun increase */
-let sun2 = gsap.timeline();
-ScrollTrigger.create({
-    animation: sun2,
-    trigger: ".scrollElement",
-    start: "2200 top",
-    end: "5000 100%",
-    scrub: 1,
-});
-
-sun2.to("#sun", { attr: { offset: "0.6" } }, 0)
-sun2.to("#bg_grad stop:nth-child(2)", { attr: { offset: "0.7" } }, 0)
-sun2.to("#sun", { attr: { "stop-color": "#ffff00" } }, 0)
-sun2.to("#lg4 stop:nth-child(1)", { attr: { "stop-color": "#623951" } }, 0)
-sun2.to("#lg4 stop:nth-child(2)", { attr: { "stop-color": "#261F36" } }, 0)
-sun2.to("#bg_grad stop:nth-child(6)", { attr: { "stop-color": "#45224A" } }, 0)
-
-
-
-/* Transition (from Scene2 to Scene3) */
-gsap.set("#scene3", { y: 580, visibility: "visible" })
-let sceneTransition = gsap.timeline();
-ScrollTrigger.create({
-    animation: sceneTransition,
-    trigger: ".scrollElement",
-    start: "70% top",
-    end: "bottom 100%",
-    scrub: 3,
-});
-
-sceneTransition.to("#h2-1", { y: -680, scale: 1.5, transformOrigin: "50% 50%" }, 0)
-sceneTransition.to("#bg_grad", { attr: { cy: "-80" } }, 0.00)
-sceneTransition.to("#bg2", { y: 0 }, 0)
-
-
-
-/* Scene 3 */
-let scene3 = gsap.timeline();
-ScrollTrigger.create({
-    animation: scene3,
-    trigger: ".scrollElement",
-    start: "80% 50%",
-    end: "bottom 100%",
-    scrub: 3,
-});
-
-//Hills motion
-scene3.fromTo("#h3-1", { y: 300 }, { y: -550 }, 0)
-scene3.fromTo("#h3-2", { y: 800 }, { y: -550 }, 0.03)
-scene3.fromTo("#h3-3", { y: 600 }, { y: -550 }, 0.06)
-scene3.fromTo("#h3-4", { y: 800 }, { y: -550 }, 0.09)
-scene3.fromTo("#h3-5", { y: 1000 }, { y: -550 }, 0.12)
-
-//stars
-scene3.fromTo("#stars", { opacity: 0 }, { opacity: 0.5, y: -500 }, 0)
-
-// Scroll Back text
-scene3.fromTo("#arrow2", { opacity: 0 }, { opacity: 0.7, y: -710 }, 0.25)
-scene3.fromTo("#text2", { opacity: 0 }, { opacity: 0.7, y: -710 }, 0.3)
-
-//gradient value change
-scene3.to("#bg2-grad", { attr: { cy: 600 } }, 0)
-scene3.to("#bg2-grad", { attr: { r: 500 } }, 0)
-
-
-/*   falling star   */
-gsap.to("#fstar", {
-    x: -700,
-    y: -250,
-    ease: "power4.out",
-    scrollTrigger: {
-        trigger: ".scrollElement",
-        start: "4000 top",
-        end: "6000 100%",
-        scrub: 5,
-        onEnter: function() { gsap.set("#fstar", { opacity: 1 }) },
-        onLeave: function() { gsap.set("#fstar", { opacity: 0 }) },
+function compile(shader, source) {
+    gl.shaderSource(shader, source)
+    gl.compileShader(shader);
+    
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error(gl.getShaderInfoLog(shader))
     }
-})
-
-
-//reset scrollbar position after refresh
-window.onbeforeunload = function() {
-    window.scrollTo(0, 0);
 }
 
+let program
 
-let fullscreen;
-let fsEnter = document.getElementById('fullscr');
-fsEnter.addEventListener('click', function (e) {
-e.preventDefault();
-if (!fullscreen) {
-    fullscreen = true;
-    document.documentElement.requestFullscreen();
-    fsEnter.innerHTML = "Exit Fullscreen";
+function setup() {
+    const vs = gl.createShader(gl.VERTEX_SHADER)
+    const fs = gl.createShader(gl.FRAGMENT_SHADER)
+    
+    compile(vs, vertexSource)
+    compile(fs, fragmentSource)
+    
+    program = gl.createProgram()
+    
+    gl.attachShader(program, vs)
+    gl.attachShader(program, fs)
+    gl.linkProgram(program)
+    
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      console.error(gl.getProgramInfoLog(program))
+    }
 }
-else {
-    fullscreen = false;
-    document.exitFullscreen();
-    fsEnter.innerHTML = "Go Fullscreen";
+
+let vertices, buffer
+
+function init() {
+    vertices = [
+        -1., 1.,
+        -1.,-1.,
+         1., 1.,
+         1.,-1.,
+        ]
+    
+    buffer = gl.createBuffer()
+    
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
+    
+    const position = gl.getAttribLocation(program, "position")
+    
+    gl.enableVertexAttribArray(position)
+    gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0)
+    
+    program.resolution = gl.getUniformLocation(program, "resolution")
+    program.time = gl.getUniformLocation(program, "time")
 }
-});
+
+function loop(now) {
+    gl.clearColor(0, 0, 0, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.useProgram(program)
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+    gl.uniform2f(program.resolution, canvas.width, canvas.height)
+    gl.uniform1f(program.time, now * 1e-3)
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, vertices.length*.5)
+    requestAnimationFrame(loop)
+}
+
+setup()
+init()
+resize()
+loop(0)
