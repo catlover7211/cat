@@ -1,42 +1,20 @@
-document.addEventListener("DOMContentLoaded", function () {
-	const heroGrid = document.querySelector(".tiltgrid");
-	const hero = document.querySelector(".hero");
-	const tiltDegree = 7;
-	function isElementInViewport(element) {
-		const rect = element.getBoundingClientRect();
-		return (
-			rect.bottom > 0 &&
-			rect.right > 0 &&
-			rect.left < (window.innerWidth || document.documentElement.clientWidth) &&
-			rect.top < (window.innerHeight || document.documentElement.clientHeight)
-		);
-	}
-	function mapRange(value, inMin, inMax, outMin, outMax) {
-		return ((value - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
-	}
-	function updateScrollPos() {
-		const scrollPos = window.scrollY;
-		const rect = heroGrid.getBoundingClientRect();
-		const scrollPercent = (scrollPos * 100) / rect.height;
-
-		let mappedValue = mapRange(scrollPercent, 0, 100, tiltDegree * -1, tiltDegree);
-		heroGrid.style.setProperty("--scroll-tilt", `${mappedValue}`);
-		let heroOpacity = mapRange(scrollPercent, 0, 10, 1, 0);
-		let heroScale = mapRange(scrollPercent, 0, 10, 1, 0);
-		let heroTransformY = mapRange(scrollPercent, 0, 10, 0, -100);
-		let heroBlur = mapRange(scrollPercent, 0, 10, 0, 20);
-		hero.style.opacity = heroOpacity;
-		hero.style.filter = `blur(${heroBlur}px)`;
-		hero.style.transform = `translateY(${heroTransformY}px)`;
-	}
-
-	function handleScroll() {
-		if (heroGrid && isElementInViewport(heroGrid)) {
-			updateScrollPos();
-		}
-	}
-
-	window.addEventListener("scroll", handleScroll);
-
-	handleScroll();
-});
+// TypeScript
+var typing = new Typed(".text", {
+	strings: ["", "creators.", "editors."],
+	typeSpeed: 100,
+	backSpeed: 40,
+	loop: true
+  });
+  
+  // GSAP
+  gsap.registerPlugin(ScrollTrigger);
+  const introsplitTypes = document.querySelectorAll(".left-part h1");
+  introsplitTypes.forEach((char, i) => {
+	const i_text = new SplitType(char);
+	gsap.to(i_text.chars, {
+	  y: 0,
+	  stagger: 0.08, // text splitting transition
+	  duration: 0.3 // full text duration
+	});
+  });
+  
