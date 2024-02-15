@@ -17,4 +17,3 @@ var typing = new Typed(".text", {
 	  duration: 0.3 // full text duration
 	});
   });
-  
