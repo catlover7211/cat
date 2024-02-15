@@ -1,6 +1,6 @@
 // TypeScript
 var typing = new Typed(".text", {
-  strings: ["", "creators.", "editors."],
+  strings: ["","creaters.", "hackers.", "TCIVS."],
   typeSpeed: 100,
   backSpeed: 40,
   loop: true
