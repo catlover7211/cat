@@ -1,8 +1,8 @@
 // TypeScript
 var typing = new Typed(".text", {
     strings: ["", "creators.", "editors."],
-    typeSpeed: 100,
-    backSpeed: 40,
+    typespeed: 100,
+    backspeed: 40,
     loop: true
   });
   
